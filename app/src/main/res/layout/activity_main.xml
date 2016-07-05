@@ -2,7 +2,8 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="fill_parent"
     android:layout_height="fill_parent"
-    android:orientation="vertical" >
+    xmlns:opencv="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical">
 
     <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
         android:layout_width="fill_parent"
@@ -33,6 +34,16 @@
             android:layout_gravity="center"
             />
     </LinearLayout>
+
+
+    <org.opencv.android.JavaCameraView
+        android:layout_width="fill_parent"
+        android:layout_height="fill_parent"
+        android:visibility="gone"
+        android:id="@+id/HelloOpenCvView"
+        opencv:show_fps="true"
+        opencv:camera_id="any" />
+
 
 
     <FrameLayout

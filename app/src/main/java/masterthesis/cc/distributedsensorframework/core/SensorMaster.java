@@ -25,16 +25,18 @@ public class SensorMaster extends Service {
     private ArrayList<String> primarySensors= new ArrayList<String>();
     private ArrayList<String> secondarySensors= new ArrayList<String>();
 
+    private final SaveClass saveClass = SaveClass.getInstance(this);
 
-    private MainActivity callbackActivity;
+
+    private MeasurementActivity callbackActivity;
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         this.primarySensors = intent.getStringArrayListExtra("primarySensors");
         this.secondarySensors = intent.getStringArrayListExtra("secondarySensors");
 
-        Log.d("Service", "Primary: "  + this.primarySensors.toString());
-        Log.d("Service", "Secondrary Sensor: "+ this.secondarySensors.toString());
+        saveClass.writeLog(SaveClass.LogType.INFO, "Primary: "  + this.primarySensors.toString());
+        saveClass.writeLog(SaveClass.LogType.INFO, "Secondrary Sensor: " + this.secondarySensors.toString());
 
         mgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
         mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_UI);
@@ -54,7 +56,7 @@ public class SensorMaster extends Service {
 
     public class MyBinder extends Binder {
         SensorMaster getService() {
-            Log.d("Sercie", "BinderGetServiec");
+            saveClass.writeLog(SaveClass.LogType.INFO, "BinderGetServiec");
             return SensorMaster.this;
         }
     }
@@ -106,7 +108,7 @@ public class SensorMaster extends Service {
     }
 
 
-    public void registerCallback(MainActivity m){
+    public void registerCallback(MeasurementActivity m){
         this.callbackActivity = m;
     }
 
