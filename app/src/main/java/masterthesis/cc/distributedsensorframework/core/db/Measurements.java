@@ -1,17 +1,20 @@
 package masterthesis.cc.distributedsensorframework.core.db;
 
+import java.util.Date;
+
 /**
- * Created by luke on 19.04.16.
+ * Created by Christoph Classen on 19.04.16.
+ * Diese Klasse repräsentiert genau einen Messwert, wie er auch in der DB gespeichert wird.
  */
 public class Measurements {
 
-    private int time;
+    private Date timestamp;
     private int sensor;
     private double value;
     private String device;
 
-    public Measurements(int time, int sensor, double value, String device){
-        this.time=time;
+    public Measurements(Date timestamp, int sensor, double value, String device){
+        this.timestamp=timestamp;
         this.sensor=sensor;
         this.value=value;
         this.device=device;
@@ -42,18 +45,19 @@ public class Measurements {
         this.device = device;
     }
 
-    public int getTime() {
-        return time;
+    public Date getTimestamp() {
+        return timestamp;
     }
 
-    public void setTime(int time) {
-        this.time = time;
+    public void setTimestamp(Date timestamp) {
+        this.timestamp = timestamp;
     }
+
 
     @Override
     public String toString() {
         return "Measurements{" +
-                "time=" + time +
+                "timestamp=" + timestamp.toString() +
                 ", sensor=" + sensor +
                 ", value=" + value +
                 ", device='" + device + '\'' +

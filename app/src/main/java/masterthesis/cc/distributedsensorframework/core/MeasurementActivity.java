@@ -1,7 +1,6 @@
 package masterthesis.cc.distributedsensorframework.core;
 
 import org.opencv.android.BaseLoaderCallback;
-import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
@@ -9,19 +8,13 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 import android.app.Activity;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
-import java.io.FileReader;
 import java.util.ArrayList;
-import java.util.List;
-
-import masterthesis.cc.distributedsensorframework.R;
 
 public class MeasurementActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
 
@@ -34,7 +27,7 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
     private int                  mViewWidth;
     private int                  mViewHeight;
 
-    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+    protected BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {
             switch (status) {
@@ -71,7 +64,6 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         mSaving = SaveClass.getInstance(this.getApplicationContext());
 
         mProcessor = new Processor(4);
-       // mProcessor.prepareNewGame();
     }
 
     @Override
@@ -107,7 +99,8 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
     }
 
     public boolean onTouch(View view, MotionEvent event) {
-        int xpos, ypos;
+
+      int xpos, ypos;
 
         xpos = (view.getWidth() - mViewWidth) / 2;
         xpos = (int)event.getX() - xpos;
@@ -116,9 +109,10 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         ypos = (int)event.getY() - ypos;
 
         if (xpos >=0 && xpos <= mViewWidth && ypos >=0  && ypos <= mViewHeight) {
-            /* click is inside the picture. Deliver this event to processor */
+            // click is inside the picture. Deliver this event to processor
             mProcessor.deliverTouchEvent(xpos, ypos);
         }
+
 
         return false;
     }
