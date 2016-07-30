@@ -4,14 +4,57 @@
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
+<LinearLayout
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="horizontal">
 
     <Button
         android:id="@+id/btn_capture"
-        android:layout_width="wrap_content"
-        android:layout_height="40dp"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
         android:onClick="onClick"
-        android:text="capture Blobs" >
+        android:text="capt. Blobs" >
     </Button>
+
+    <Button
+        android:id="@+id/btn_capture_entropie"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:onClick="onClick"
+        android:text="capt. BlobEntr." >
+    </Button>
+
+    <Button
+        android:id="@+id/btn_savenotice"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:onClick="onClick"
+        android:text="Notiz speichern" >
+    </Button>
+
+    <Button
+        android:id="@+id/btn_rssi"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:onClick="onClick"
+        android:text="RSSI" >
+    </Button>
+
+    <Button
+        android:id="@+id/btn_export"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:onClick="onClick"
+        android:text="Export" >
+    </Button>
+
+</LinearLayout>
+
+    <EditText
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/text_notice" />
 
     <org.opencv.android.JavaCameraView
         android:layout_width="fill_parent"
@@ -20,5 +63,9 @@
         android:id="@+id/OpenCvCameraView"
         opencv:show_fps="true"
         opencv:camera_id="back" />
+
+
+
+
 
 </LinearLayout>

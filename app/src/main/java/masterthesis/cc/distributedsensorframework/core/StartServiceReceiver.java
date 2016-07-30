@@ -12,8 +12,8 @@ public class StartServiceReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.e("StartRec", "StartServiceReciever on receive");
-        Intent service = new Intent(context, SensorMaster.class);
-        context.startService(service);
+//        Log.e("StartRec", "StartServiceReciever on receive");
+//        Intent service = new Intent(context, SensorMaster.class);
+//        context.startService(service);
     }
 }

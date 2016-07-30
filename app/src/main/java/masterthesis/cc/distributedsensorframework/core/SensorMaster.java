@@ -8,16 +8,25 @@ import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
 import android.os.Binder;
+import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+
+import masterthesis.cc.distributedsensorframework.core.CustomSensor.CustomSensorEvent;
+import masterthesis.cc.distributedsensorframework.core.CustomSensor.CustomSensorEventListener;
+import masterthesis.cc.distributedsensorframework.core.CustomSensor.LocationSensor;
+import masterthesis.cc.distributedsensorframework.core.CustomSensor.RssiSensor;
+import masterthesis.cc.distributedsensorframework.core.db.Measurements;
 
 /**
  * Created by luke on 04.04.16.
  */
 public class SensorMaster extends Service {
+
 
     private final IBinder mBinder = new MyBinder();
     private ArrayList<String> list = new ArrayList<String>();
@@ -25,26 +34,54 @@ public class SensorMaster extends Service {
     private ArrayList<String> primarySensors= new ArrayList<String>();
     private ArrayList<String> secondarySensors= new ArrayList<String>();
 
-    private final SaveClass saveClass = SaveClass.getInstance(this);
+    protected SaveClass saveClass;
 
 
     private MeasurementActivity callbackActivity;
 
+
+
+    private LocationSensor ls;
+    private RssiSensor rs;
+
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        this.primarySensors = intent.getStringArrayListExtra("primarySensors");
-        this.secondarySensors = intent.getStringArrayListExtra("secondarySensors");
+        Log.e("Sensormaster", System.currentTimeMillis() + ": service started");
 
-        saveClass.writeLog(SaveClass.LogType.INFO, "Primary: "  + this.primarySensors.toString());
-        saveClass.writeLog(SaveClass.LogType.INFO, "Secondrary Sensor: " + this.secondarySensors.toString());
+//        this.primarySensors = intent.getStringArrayListExtra("primarySensors");
+//        this.secondarySensors = intent.getStringArrayListExtra("secondarySensors");
+
+        saveClass = SaveClass.getInstance(getApplicationContext());
+//        saveClass.writeLog(SaveClass.LogType.INFO, "Primary: "  + this.primarySensors.toString());
+//        saveClass.writeLog(SaveClass.LogType.INFO, "Secondrary Sensor: " + this.secondarySensors.toString());
 
         mgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
-        mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_LIGHT), SensorManager.SENSOR_DELAY_UI);
-      //  mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER), SensorManager.SENSOR_DELAY_UI);
+       // mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_LIGHT),SensorManager.SENSOR_DELAY_UI);
+        //mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),1000*30 );
+       // mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), 1000*10);
 
-        //return Service.START_STICKY;
-        return Service.START_NOT_STICKY;
+        Log.w("LocationSensor", "StartingLocSensor");
+        ls = new LocationSensor(getApplicationContext());
+      //  ls.registerListener(customListener, 5000);
+
+        rs = new RssiSensor(getApplicationContext());
+        Log.w("SensorMaster", "Current RSSI Value: "+rs.getCurrentValue()[0]);
+
+        rs.registerListener(customListener,0);
+
+
+        return Service.START_STICKY;
     }
+
+
+    @Override
+    public  void onDestroy(){
+        ls.removeListener();
+
+        Log.e("Sensormaster", System.currentTimeMillis() + ": service gesoppt");
+        super.onDestroy();
+    }
+
 
 
 
@@ -62,34 +99,80 @@ public class SensorMaster extends Service {
     }
 
 
-    private SensorEventListener listener = new SensorEventListener() {
+    protected SensorEventListener listener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event){
+
             if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER){
-                float x,y,z;
-                x = event.values[0];
-                y= event.values[1];
-                z= event.values[2];
-                list.add(0,event.timestamp + ": "+ x + "|" + y + "|" + z+ " (Acc: "+event.accuracy+")");
-                updateCallback();
+//                float x,y,z;
+//                x = event.values[0];
+//                y= event.values[1];
+//                z= event.values[2];
+                saveToDb(Sensor.TYPE_ACCELEROMETER, event);
+//                list.add(0,event.timestamp + ": "+ x + "|" + y + "|" + z+ " (Acc: "+event.accuracy+")");
+//                updateCallback();
             }
 
             if (event.sensor.getType() == Sensor.TYPE_LIGHT){
-                float x;
-                x = event.values[0];
-              //  list.add(0, event.timestamp + ": " +x + "(Acc: "+event.accuracy+")");
-                list.add(0, x + "");
-
-                updateCallback();
+                saveToDb(Sensor.TYPE_LIGHT, event);
+                //float x;
+//                x = event.values[0];
+//              //  list.add(0, event.timestamp + ": " +x + "(Acc: "+event.accuracy+")");
+//                list.add(0, x + "");
+//
+//                updateCallback();
             }
         }
 
         @Override
         public void onAccuracyChanged(Sensor sensor, int accuracy) {
             //unused
+
         }
     };
 
+
+    protected CustomSensorEventListener customListener = new CustomSensorEventListener() {
+
+        @Override
+        public void onSensorChanged(CustomSensorEvent event) {
+
+            if (event.getSensorType()== 101) {
+
+                Log.w("SensorMaster", event.getValue(0) + " " + event.getValue(1));
+            }else if (event.getSensorType() ==102) {
+                Log.w("SensorMaster", "Current RSSI Value2: " + rs.getCurrentValue()[0]);
+            }else{
+                Log.w("SensorMaster", "was anderes");
+            }
+        }
+
+        @Override
+        public void onSensorStatusChanged() {
+
+        }
+    };
+
+
+
+    public void saveToDb(int sensortype, SensorEvent event){
+
+        Log.e("Sensorvalues",  event.values[0] +"; " +event.values[1] +"; " +event.values[2] +"; " );
+        //final TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
+        String devicename = Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
+
+
+        Measurements messung = new Measurements(0,new Date(),sensortype, event.values[0]+"",devicename);
+        Log.e("SensorMaster", messung.toString());
+        // Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
+        saveClass.saveValue(messung);
+
+
+
+
+
+    }
 
 
 
@@ -101,12 +184,6 @@ public class SensorMaster extends Service {
     }
 
 
-    @Override
-    public  void onDestroy(){
-        super.onDestroy();
-        mgr.unregisterListener(listener);
-    }
-
 
     public void registerCallback(MeasurementActivity m){
         this.callbackActivity = m;
@@ -115,16 +192,6 @@ public class SensorMaster extends Service {
     public List<String> getWordList() {
         return list;
     }
-
-
-
-
-
-
-
-
-
-
 
 
 

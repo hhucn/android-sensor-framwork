@@ -32,7 +32,7 @@ public class Helper extends SQLiteOpenHelper {
     public static final String SQL_CREATE =
             "CREATE TABLE " + TABLE_MEASUREMENTS + " ( " + COLUM_ID + " INTEGER PRIMARY KEY AUTOINCREMENT, " +
                     COLUM_SENSOR + " INTEGER NOT NULL, " +
-                    COLUM_VALUE + " DOUBLE NOT NULL, " +
+                    COLUM_VALUE + " VARCHAR NOT NULL, " +
                     COLUM_TIMESTAMP + " DATE NOT NULL, " +
                     COLUM_DEVICE + " TEXT NOT NULL ) ; ";
 
@@ -41,8 +41,8 @@ public class Helper extends SQLiteOpenHelper {
     public Helper(Context context){
         super(context, DB_NAME, null, DB_VERSION);
         //DB erzeugt
-        Log.d("DATABASE", "DB Helper erstellt");
-        LOG.debug("DB Helper erstellt2");
+        //Log.d("DATABASE", "DB Helper erstellt");
+        LOG.debug("DB Helper erstellt");
     }
 
 
@@ -51,10 +51,10 @@ public class Helper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         try {
             db.execSQL(SQL_CREATE);
-            Log.d("DATABASE", "Datenbank angelegt");
-            LOG.debug("Datenban angelegt2");
+            //Log.d("DATABASE", "Datenbank angelegt");
+            LOG.debug("Datenbank angelegt");
         }catch (Exception e){
-            Log.e("DATABASE", "Datenbank nicht angelegt: " + e.getMessage());
+            LOG.error("Datenbank nicht angelegt: " + e.getMessage());
         }
 
     }

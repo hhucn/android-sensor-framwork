@@ -19,12 +19,18 @@ public class ScheduleReciever extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
-        Log.e("ShdRec", "ScheduleReciever on receive");
-//        AlarmManager service = (AlarmManager) context
-//                .getSystemService(Context.ALARM_SERVICE);
-        Intent i = new Intent(context, StartServiceReceiver.class);
-        PendingIntent pending = PendingIntent.getBroadcast(context, 0, i,
-                PendingIntent.FLAG_CANCEL_CURRENT);
+//        Log.e("ShdRec", "ScheduleReciever on receive");
+//        //        AlarmManager service = (AlarmManager) context
+//        //                .getSystemService(Context.ALARM_SERVICE);
+//        Intent i = new Intent(context, StartServiceReceiver.class);
+//        PendingIntent pending = PendingIntent.getBroadcast(context, 0, i,
+//                PendingIntent.FLAG_CANCEL_CURRENT);
+
+
+
+
+
+
 //        Calendar cal = Calendar.getInstance();
         // start 30 seconds after boot completed
 //        cal.add(Calendar.SECOND, 30);

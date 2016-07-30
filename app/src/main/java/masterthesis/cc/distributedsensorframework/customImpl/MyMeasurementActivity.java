@@ -1,17 +1,24 @@
 package masterthesis.cc.distributedsensorframework.customImpl;
 
 
+import android.content.Intent;
+import android.graphics.Bitmap;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Environment;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.Button;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
+import org.opencv.android.Utils;
 import org.opencv.core.Core;
+import org.opencv.core.CvException;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfPoint;
@@ -20,11 +27,17 @@ import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
 
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
 
 import masterthesis.cc.distributedsensorframework.R;
+import masterthesis.cc.distributedsensorframework.core.CustomSensor.RssiSensor;
 import masterthesis.cc.distributedsensorframework.core.MeasurementActivity;
+import masterthesis.cc.distributedsensorframework.core.SensorMaster;
 import masterthesis.cc.distributedsensorframework.core.db.Measurements;
 
 /**
@@ -32,7 +45,7 @@ import masterthesis.cc.distributedsensorframework.core.db.Measurements;
  */
 public class MyMeasurementActivity extends MeasurementActivity implements View.OnClickListener {
 
-    private static final String  TAG              = "MyMeasurement::Activity";
+    private static final String  TAG              = "MyMeasurement::Activity ";
 
     private boolean              mIsColorSelected = false;
     private Mat                  mRgba;
@@ -43,7 +56,12 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     private Scalar               CONTOUR_COLOR;
     private int                  mBlobCount;
     private Button               mBtnCapture;
+    private Button               mBtnCaptureEntropie;
+    private Button               mBtnExport;
+    private Button               mBtnNotice;
+    private TextView            mTxtNotice;
 
+    private String               devicename;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -55,8 +73,10 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         mOpenCvCameraView.setFocus(Camera.Parameters.FOCUS_MODE_FIXED);
         mOpenCvCameraView.setLockWhiteBalance(true);
         mOpenCvCameraView.setZoom(2);*/
-        Log.e("MYmeasuerment", "-##########################started###########################");
+        //Log.e("MYmeasuerment", "-##########################started###########################");
+        LOG.info(TAG + " started");
 
+        devicename = Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
 
 
         //Contentview der Superklasse überschreiben
@@ -65,26 +85,45 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         mBtnCapture = (Button) findViewById(R.id.btn_capture);
         mBtnCapture.setOnTouchListener(this);
 
+        mBtnCaptureEntropie = (Button) findViewById(R.id.btn_capture_entropie);
+        mBtnCaptureEntropie.setOnTouchListener(this);
+
+        mBtnNotice = (Button) findViewById(R.id.btn_savenotice);
+        mBtnNotice.setOnTouchListener(this);
+
+        mBtnExport = (Button) findViewById(R.id.btn_export);
+        mBtnExport.setOnTouchListener(this);
+
+
+        mTxtNotice = (TextView) findViewById(R.id.text_notice);
+
+
         mOpenCvCameraView = (JavaCameraView) findViewById(R.id.OpenCvCameraView);
         mOpenCvCameraView.setCvCameraViewListener(this);
+
+
+        startService();
+
+
+
     }
 
 
-
-    public void ColorBlobDetectionActivity() {
-        Log.i(TAG, "Instantiated new " + this.getClass());
+    @Override
+    public void onDestroy(){
+        super.onDestroy();
+        stopService();
     }
-
 
     @Override
     public void onResume()
     {
         super.onResume();
         if (!OpenCVLoader.initDebug()) {
-            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+            LOG.debug(TAG +"Internal OpenCV library not found. Using OpenCV Manager for initialization");
             OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
         } else {
-            Log.d(TAG, "OpenCV library found inside package. Using it!");
+            LOG.debug(TAG +  "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
         }
     }
@@ -98,12 +137,13 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         mBlobColorRgba = new Scalar(255);
         mBlobColorHsv = new Scalar(255);
         SPECTRUM_SIZE = new Size(200, 64);
-        CONTOUR_COLOR = new Scalar(255,0,0,255);
+        CONTOUR_COLOR = new Scalar(0,255,0,255);
         mBlobCount=0;
     }
 
     public void onCameraViewStopped() {
         mRgba.release();
+        stopService();
     }
 
 
@@ -135,8 +175,31 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
             case R.id.btn_capture:
                 //Capturebutton speichert die Anzahl der aktuellen blobs
                 this.saveBlobCount(this.mBlobCount);
+                this.saveMatToFile();
+                break;
+            case R.id.btn_capture_entropie:
+                //Capturebutton speichert die Entropie der aktuellen blobs
+                this.saveBlobEntropie(this.mBlobCount);
+                break;
+            case R.id.btn_savenotice:
+                Measurements m = new Measurements(0,new Date(),0,mTxtNotice.getText().toString(),devicename);
+                mSaving.saveValue(m);
+                Toast.makeText(this, "Notiz gespeichert:"+ m.toString(), Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.btn_export:
+
+                File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                mSaving.exportCSV(f.getAbsolutePath() + "/sfw_measuerments.csv");
+                Toast.makeText(this, "Datenbank nach Downloads/swf_measuerments.csv Exportiert", Toast.LENGTH_SHORT).show();
                 break;
 
+            case R.id.btn_rssi:
+                RssiSensor rs = new RssiSensor(getApplicationContext());
+
+                Measurements meas = new Measurements(0, new Date(),rs.getSensorId(),rs.getCurrentValue()[0] +"", devicename);
+                LOG.info(TAG + "RssiValue: "+ meas.getValue());
+                mSaving.saveValue(meas);
+                break;
         }
     }
 
@@ -154,9 +217,9 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         int yOffset = (mOpenCvCameraView.getHeight() - rows) / 2;
 
         int x = (int)event.getX() - xOffset;
-        int y = (int)event.getY() - yOffset;
+        int y = (int) event.getY() - yOffset;
 
-        Log.d(TAG, "Touch image coordinates: (" + x + ", " + y + ")");
+        LOG.info(TAG + " Touch image coordinates: (" + x + ", " + y + ")");
 
         if ((x < 0) || (y < 0) || (x > cols) || (y > rows)){
             //alles was außerhalb der View liegt, ignorieren
@@ -183,7 +246,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
             mBlobColorRgba = ((MyProcessor)mProcessor).converScalarHsv2Rgba(mBlobColorHsv);
 
-            Log.d(TAG, "Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
+            LOG.debug(TAG + " Touched rgba color: (" + mBlobColorRgba.val[0] + ", " + mBlobColorRgba.val[1] +
                     ", " + mBlobColorRgba.val[2] + ", " + mBlobColorRgba.val[3] + ")");
 
             ((MyProcessor) mProcessor).setHsvColor(mBlobColorHsv);
@@ -208,7 +271,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         if (mIsColorSelected) {
             ((MyProcessor)mProcessor).process(inputFrame);
             List<MatOfPoint> contours = ((MyProcessor)mProcessor).getContours();
-            Log.i(TAG, "Contours count: " + contours.size());
+            LOG.info(TAG + "Contours count: " + contours.size());
             mBlobCount = contours.size();
             Imgproc.drawContours(inputFrame, contours, -1, CONTOUR_COLOR);
 
@@ -225,6 +288,79 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     }
 
 
+
+
+    private void saveMatToFile(){
+
+        Bitmap bmp = null;
+        try {
+            bmp = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
+            Utils.matToBitmap(mRgba, bmp);
+        } catch (CvException e) {
+            Log.d(TAG, e.getMessage());
+        }
+
+        FileOutputStream out = null;
+
+
+        SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
+
+        String filename =  "cameraframe_"+dateFormat.format(new Date())+".png";
+
+
+        File sd = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) , "/sensorframework");
+        boolean success = true;
+        if (!sd.exists()) {
+            success = sd.mkdir();
+        }
+        if (success) {
+            File dest = new File(sd, filename);
+
+            try {
+                out = new FileOutputStream(dest);
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
+                // PNG is a lossless format, the compression factor (100) is ignored
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                Log.d(TAG, e.getMessage());
+            } finally {
+                try {
+                    if (out != null) {
+                        out.close();
+                        //Log.d(TAG, "OK!!");
+                        LOG.debug("Cameraframe gespeichert!");
+                    }
+                } catch (IOException e) {
+                    //Log.d(TAG, e.getMessage() + "Error");
+                    LOG.error("Fehler beim Speichern des Bildes:"+ e.getMessage());
+                    e.printStackTrace();
+                }
+            }
+        }
+
+    }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     /**
      * Speichert die Anzahl der Aktuellen Blobs in der Datenbank
      * @param anzahl Blobanzahl
@@ -233,14 +369,43 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
         //final TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
         //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
-        String devicename = Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
 
-        Measurements messung = new Measurements(new Date(),55,anzahl*1.0,devicename);
+        Measurements messung = new Measurements(0,new Date(),55,anzahl+"",devicename);
+        Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
         mSaving.saveValue(messung);
     }
 
 
 
+
+    /**
+     * Speichert die Anzahl der Aktuellen Blobs in der Datenbank
+     * @param anzahl Blobanzahl
+     */
+    private void saveBlobEntropie(int anzahl){
+
+        //final TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
+        //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
+
+        Measurements messung = new Measurements(0,new Date(),55,anzahl+"",devicename);
+        Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
+        mSaving.saveValue(messung);
+    }
+
+
+
+
+
+    public void startService(){
+        Log.e("Mymeasurmentactivity", System.currentTimeMillis() + ": start service");
+        Intent i = new Intent(getApplicationContext(), SensorMaster.class);
+        startService(i);
+    }
+
+    public void stopService(){
+        Intent i = new Intent(getApplicationContext(), SensorMaster.class);
+        stopService(i);
+    }
 
 
 

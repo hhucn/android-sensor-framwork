@@ -7,17 +7,27 @@ import java.util.Date;
  * Diese Klasse repräsentiert genau einen Messwert, wie er auch in der DB gespeichert wird.
  */
 public class Measurements {
-
+    private int id =0;
     private Date timestamp;
     private int sensor;
-    private double value;
+    private String value;
     private String device;
 
-    public Measurements(Date timestamp, int sensor, double value, String device){
+    public Measurements(int id,Date timestamp, int sensor, String value, String device){
+        this.id = id;
         this.timestamp=timestamp;
         this.sensor=sensor;
         this.value=value;
         this.device=device;
+    }
+
+
+    public int getId() {
+        return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
 
@@ -29,11 +39,11 @@ public class Measurements {
         this.sensor = sensor;
     }
 
-    public double getValue() {
+    public String getValue() {
         return value;
     }
 
-    public void setValue(double value) {
+    public void setValue(String value) {
         this.value = value;
     }
 

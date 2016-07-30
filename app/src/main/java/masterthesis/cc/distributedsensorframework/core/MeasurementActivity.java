@@ -8,21 +8,26 @@ import org.opencv.android.OpenCVLoader;
 import org.opencv.core.Mat;
 
 import android.app.Activity;
+import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 
 public class MeasurementActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
 
-    private static final String  TAG = "MeasurementActivity";
+    private static final String  TAG = "MeasurementActivity ";
 
     protected JavaCameraView mOpenCvCameraView;
     protected Processor mProcessor;
     protected SaveClass mSaving;
+    protected Logger    LOG;
 
     private int                  mViewWidth;
     private int                  mViewHeight;
@@ -33,7 +38,7 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
             switch (status) {
                 case LoaderCallbackInterface.SUCCESS:
                 {
-                    Log.i(TAG, "OpenCV loaded successfully");
+                    LOG.info(TAG +  "OpenCV loaded successfully");
 
                     /* Now enable camera view to start receiving frames */
                     mOpenCvCameraView.setOnTouchListener(MeasurementActivity.this);
@@ -50,9 +55,13 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+        LOG = LoggerFactory.getLogger(MeasurementActivity.class);
+
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        Log.d(TAG, "************************ Creating and seting view");
+        LOG.debug("Creating and setting View");
+        //Log.d(TAG, "************************ Creating and seting view");
         mOpenCvCameraView =  new JavaCameraView(this, -1);
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setCameraIndex(JavaCameraView.CAMERA_ID_BACK);
@@ -121,6 +130,16 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         return mProcessor.processMatrix(inputFrame);
     }
 
+
+    public void startService(){
+        Intent i = new Intent(getApplicationContext(), SensorMaster.class);
+        startService(i);
+    }
+
+    public void stopService(){
+        Intent i = new Intent(getApplicationContext(), SensorMaster.class);
+        stopService(i);
+    }
 
     public void callback(ArrayList<String> words) {
 

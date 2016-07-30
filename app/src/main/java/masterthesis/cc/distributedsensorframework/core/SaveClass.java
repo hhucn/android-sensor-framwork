@@ -8,6 +8,7 @@ import android.util.Log;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
 import java.text.SimpleDateFormat;
 
 import masterthesis.cc.distributedsensorframework.core.db.Helper;
@@ -52,7 +53,7 @@ public class SaveClass {
 
 
     public void saveValue(Measurements measurements){
-        //TODO WRITE INTO DB
+        //TODO switch to Update
         LOG.error(measurements.toString());
         LOG.debug(measurements.toString());
         LOG.trace(measurements.toString());
@@ -68,7 +69,13 @@ public class SaveClass {
         values.put(Helper.COLUM_DEVICE, measurements.getDevice());
         values.put(Helper.COLUM_VALUE, measurements.getValue());
 
-        long insertId = source.insert(values);
+        long insertId;
+        if (measurements.getId()==0) {
+            insertId = source.insert(values);
+        }else{
+            //Update
+            insertId = source.update(values, "WHERE "+Helper.COLUM_ID+" = "+measurements.getId());
+        }
         LOG.debug("einfügeid ist: "+ insertId);
         Log.d("database", "einfügeid ist2:" + insertId + "##" + measurements.toString());
     }
@@ -76,6 +83,16 @@ public class SaveClass {
     public Cursor loadValues(int limit){
         return source.load(limit);
     }
+
+
+    public void exportCSV(String file){
+        source.exportCSV(file);
+
+
+
+    }
+
+
 
     public void finalize(){
         LOG.debug("Die Datenquelle wird geschlossen.");
