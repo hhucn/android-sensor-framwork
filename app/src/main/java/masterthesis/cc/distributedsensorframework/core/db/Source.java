@@ -7,6 +7,9 @@ import android.database.sqlite.SQLiteDatabase;
 import android.os.Environment;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
@@ -23,27 +26,28 @@ public class Source {
 
     private SQLiteDatabase database;
     private Helper dbHelper;
-
+    private Logger LOG;
 
     public Source(Context context){
         dbHelper = new Helper(context);
+        LOG = LoggerFactory.getLogger(Source.class);
+
     }
 
     public void open() {
-        Log.d("DATABASE", "Eine Referenz auf die Datenbank wird jetzt angefragt.");
+        LOG.info("Eine Referenz auf die Datenbank wird jetzt angefragt.");
         database = dbHelper.getWritableDatabase();
-        Log.d("DATABASE", "Datenbank-Referenz erhalten. Pfad zur Datenbank: " + database.getPath());
+        LOG.info("Datenbank-Referenz erhalten. Pfad zur Datenbank: " + database.getPath());
     }
 
     public void close() {
         dbHelper.close();
-        Log.d("DATABASE", "Datenbank mit Hilfe des DbHelpers geschlossen.");
+        LOG.info("Datenbank mit Hilfe des DbHelpers geschlossen.");
     }
 
 
     public long insert(ContentValues cv){
         return database.insert(Helper.TABLE_MEASUREMENTS, null, cv);
-
     }
 
 
@@ -51,7 +55,7 @@ public class Source {
 
     public Cursor load(int limit){
         Cursor cursor  = database.query(Helper.TABLE_MEASUREMENTS,null, null, null, null, null, null, limit+"");
-        Log.e("Database load query", "geladene Zeilen: " + cursor.getColumnCount()+"");
+        LOG.info("Anzahl geladener Zeilen: " + cursor.getColumnCount()+"");
         cursor.moveToFirst();
        // Measurements m = this.cursorToMesswert(cursor);
         //cursor.close();
@@ -80,11 +84,11 @@ public class Source {
         try {
             date = df.parse(timestamp);
         }catch(ParseException e){
-            Log.e("DB Scource", e.getMessage());
+            LOG.error("Fehler beim parsen der Datumsangaben" + e.getMessage());
             date = null;
         }
         Measurements meas = new Measurements(id,date,sensor,value, device);
-        Log.i("Datenbankergebnis:", meas.toString());
+        LOG.info(meas.toString());
         return meas;
 
     }
@@ -95,7 +99,7 @@ public class Source {
 
 
     public Boolean exportCSV(String outFileName) {
-        Log.d("Source", "backupDatabaseCSV");
+        LOG.debug("saving Backup as CSV:");
         Boolean returnCode = false;
         int i = 0;
         String csvHeader = "ID,SensorId,Value,Zeitstempel,GeraeteId";
@@ -108,7 +112,7 @@ public class Source {
         }*/
 
         csvHeader += "\n";
-        Log.d("source", "header=" + csvHeader);
+        LOG.debug("Header: " + csvHeader);
         //open();
         try {
             File outFile = new File(outFileName);
@@ -134,7 +138,7 @@ public class Source {
             returnCode = true;
         } catch (IOException e) {
             returnCode = false;
-            Log.d("Source", "IOException: " + e.getMessage());
+            LOG.error("IOException beim CSV Esport: " + e.getMessage());
         }
        // close();
         return returnCode;

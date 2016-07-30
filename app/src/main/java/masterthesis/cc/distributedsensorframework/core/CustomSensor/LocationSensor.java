@@ -32,7 +32,7 @@ public class LocationSensor extends GenericSensor implements LocationListener{
 
         if (! locMgr.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
             Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            context.startActivity(intent);
+            context.startActivity(intent); //TODO
         }
 
         Criteria criteria = new Criteria();

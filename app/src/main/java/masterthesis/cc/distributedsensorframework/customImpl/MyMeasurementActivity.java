@@ -268,7 +268,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     public Mat onCameraFrame(Mat inputFrame) {
         inputFrame.copyTo(mRgba);
 
-        if (mIsColorSelected) {
+     /*   if (mIsColorSelected) {
             ((MyProcessor)mProcessor).process(inputFrame);
             List<MatOfPoint> contours = ((MyProcessor)mProcessor).getContours();
             LOG.info(TAG + "Contours count: " + contours.size());
@@ -282,7 +282,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
             //zugehöriges Farbsprektrum ebenfalls einblenden
             Mat spectrumLabel = inputFrame.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
             mSpectrum.copyTo(spectrumLabel);
-        }
+        }*/
 
         return inputFrame;
     }
@@ -297,7 +297,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
             bmp = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
             Utils.matToBitmap(mRgba, bmp);
         } catch (CvException e) {
-            Log.d(TAG, e.getMessage());
+            LOG.debug("Bitmap konnte nicht aus Mat erzeugt werden: ", e.getMessage());
         }
 
         FileOutputStream out = null;
@@ -323,7 +323,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
             } catch (Exception e) {
                 e.printStackTrace();
-                Log.d(TAG, e.getMessage());
+                LOG.debug(TAG + e.getMessage());
             } finally {
                 try {
                     if (out != null) {

@@ -12,6 +12,9 @@ import android.os.Build;
 import android.os.IBinder;
 import android.util.Log;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -35,7 +38,8 @@ public class SensorMaster extends Service {
     private ArrayList<String> secondarySensors= new ArrayList<String>();
 
     protected SaveClass saveClass;
-
+    protected Logger LOG;
+    protected String TAG = "SensorMaster ";
 
     private MeasurementActivity callbackActivity;
 
@@ -46,7 +50,8 @@ public class SensorMaster extends Service {
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.e("Sensormaster", System.currentTimeMillis() + ": service started");
+        LOG = LoggerFactory.getLogger(SensorMaster.class);
+        LOG.info(TAG + "service started");
 
 //        this.primarySensors = intent.getStringArrayListExtra("primarySensors");
 //        this.secondarySensors = intent.getStringArrayListExtra("secondarySensors");
@@ -60,15 +65,11 @@ public class SensorMaster extends Service {
         //mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),1000*30 );
        // mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), 1000*10);
 
-        Log.w("LocationSensor", "StartingLocSensor");
         ls = new LocationSensor(getApplicationContext());
-      //  ls.registerListener(customListener, 5000);
+        ls.registerListener(customListener, 5000);
 
         rs = new RssiSensor(getApplicationContext());
-        Log.w("SensorMaster", "Current RSSI Value: "+rs.getCurrentValue()[0]);
-
         rs.registerListener(customListener,0);
-
 
         return Service.START_STICKY;
     }

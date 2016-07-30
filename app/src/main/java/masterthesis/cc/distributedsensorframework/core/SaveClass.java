@@ -53,13 +53,6 @@ public class SaveClass {
 
 
     public void saveValue(Measurements measurements){
-        //TODO switch to Update
-        LOG.error(measurements.toString());
-        LOG.debug(measurements.toString());
-        LOG.trace(measurements.toString());
-        LOG.info(measurements.toString());
-        LOG.warn(measurements.toString());
-
 
         ContentValues values = new ContentValues();
         // set the format to sql date time
@@ -77,7 +70,7 @@ public class SaveClass {
             insertId = source.update(values, "WHERE "+Helper.COLUM_ID+" = "+measurements.getId());
         }
         LOG.debug("einfügeid ist: "+ insertId);
-        Log.d("database", "einfügeid ist2:" + insertId + "##" + measurements.toString());
+
     }
 
     public Cursor loadValues(int limit){
