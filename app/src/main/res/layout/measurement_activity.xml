@@ -1,13 +1,22 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:opencv="http://schemas.android.com/apk/res-auto"
-    android:orientation="vertical"
+    android:orientation="horizontal"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 <LinearLayout
-    android:layout_width="match_parent"
+    android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="horizontal">
+    android:orientation="vertical">
+
+
+    <Button
+        android:id="@+id/btn_savenotice"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:onClick="onClick"
+        android:text="Notiz speichern" >
+    </Button>
 
     <Button
         android:id="@+id/btn_capture"
@@ -26,11 +35,12 @@
     </Button>
 
     <Button
-        android:id="@+id/btn_savenotice"
+        android:id="@+id/btn_gps"
         android:layout_width="80dp"
         android:layout_height="50dp"
         android:onClick="onClick"
-        android:text="Notiz speichern" >
+        android:text="GPS"
+        android:visibility="gone">
     </Button>
 
     <Button
@@ -51,18 +61,58 @@
 
 </LinearLayout>
 
-    <EditText
+
+    <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+
+        <EditText
+            android:layout_width="80dip"
+            android:layout_height="wrap_content"
+            android:inputType="numberDecimal"
+            android:ems="10"
+            android:id="@+id/text_alpha"
+            android:layout_gravity="center_horizontal"
+            android:text="1" />
+
+
+
+        <EditText
+            android:layout_width="80dip"
+            android:layout_height="wrap_content"
+            android:inputType="numberSigned"
+            android:ems="10"
+            android:id="@+id/text_beta"
+            android:layout_gravity="center_horizontal"
+            android:text="1" />
+
+
+
+        <EditText
+        android:layout_width="300dip"
         android:layout_height="wrap_content"
         android:id="@+id/text_notice" />
 
-    <org.opencv.android.JavaCameraView
-        android:layout_width="fill_parent"
-        android:layout_height="fill_parent"
-        android:visibility="visible"
-        android:id="@+id/OpenCvCameraView"
-        opencv:show_fps="true"
-        opencv:camera_id="back" />
+
+        </LinearLayout>
+
+        <org.opencv.android.JavaCameraView
+            android:layout_width="fill_parent"
+            android:layout_height="fill_parent"
+            android:visibility="visible"
+            android:id="@+id/OpenCvCameraView"
+            opencv:show_fps="true"
+            opencv:camera_id="back" />
+
+
+    </LinearLayout>
 
 
 

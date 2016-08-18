@@ -3,6 +3,8 @@ package masterthesis.cc.distributedsensorframework.customImpl;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
+import android.hardware.Sensor;
+import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Environment;
@@ -13,6 +15,7 @@ import android.widget.Button;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -26,6 +29,7 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
+import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -61,11 +65,23 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     private Button               mBtnNotice;
     private TextView            mTxtNotice;
 
+    private TextView            mTxtAlpha;
+
+    private TextView            mTxtBeta;
+
     private String               devicename;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+
+
+        SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
+        List<Sensor> list = sm.getSensorList(Sensor.TYPE_ALL);
+        for (int i=0;i<list.size();i++){
+            Sensor tmp = list.get(i);
+            LOG.info(tmp.getName() + "|" + tmp.getType());
+        }
 
         //  ((MyProcessor)mProcessor).setMinContourArea(3.0);
         /*this.mOpenCvCameraView.setColorEffect(Camera.Parameters.EFFECT_NONE);
@@ -96,7 +112,8 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
 
         mTxtNotice = (TextView) findViewById(R.id.text_notice);
-
+        mTxtAlpha = (TextView) findViewById(R.id.text_alpha);
+        mTxtBeta = (TextView) findViewById(R.id.text_beta);
 
         mOpenCvCameraView = (JavaCameraView) findViewById(R.id.OpenCvCameraView);
         mOpenCvCameraView.setCvCameraViewListener(this);
@@ -115,13 +132,14 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         stopService();
     }
 
+
     @Override
     public void onResume()
     {
         super.onResume();
         if (!OpenCVLoader.initDebug()) {
             LOG.debug(TAG +"Internal OpenCV library not found. Using OpenCV Manager for initialization");
-            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_1_0, this, mLoaderCallback);
+            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_2_4_2, this, mLoaderCallback); //3.1.0
         } else {
             LOG.debug(TAG +  "OpenCV library found inside package. Using it!");
             mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
@@ -147,69 +165,15 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     }
 
 
-    /**
-     * OnTouchListener für die Interaktion mit der CameraView
-     * @param v
-     * @param event
-     * @return
-     */
-    public boolean onTouch(View v, MotionEvent event) {
-        switch(v.getId()){
-            case R.id.OpenCvCameraView:
-                //Klick auf die CameraView setzt einen Farbraum als Blobwert
-                handlePreviewTab(event);
-                break;
-        }
 
-        return false; // don't need subsequent touch events
-    }
-
-
-    /**
-     * OnClick Listner für Butten Clicks
-     * @param v
-     */
-    @Override
-    public void onClick(View v) {
-        switch(v.getId()){
-            case R.id.btn_capture:
-                //Capturebutton speichert die Anzahl der aktuellen blobs
-                this.saveBlobCount(this.mBlobCount);
-                this.saveMatToFile();
-                break;
-            case R.id.btn_capture_entropie:
-                //Capturebutton speichert die Entropie der aktuellen blobs
-                this.saveBlobEntropie(this.mBlobCount);
-                break;
-            case R.id.btn_savenotice:
-                Measurements m = new Measurements(0,new Date(),0,mTxtNotice.getText().toString(),devicename);
-                mSaving.saveValue(m);
-                Toast.makeText(this, "Notiz gespeichert:"+ m.toString(), Toast.LENGTH_SHORT).show();
-                break;
-            case R.id.btn_export:
-
-                File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
-                mSaving.exportCSV(f.getAbsolutePath() + "/sfw_measuerments.csv");
-                Toast.makeText(this, "Datenbank nach Downloads/swf_measuerments.csv Exportiert", Toast.LENGTH_SHORT).show();
-                break;
-
-            case R.id.btn_rssi:
-                RssiSensor rs = new RssiSensor(getApplicationContext());
-
-                Measurements meas = new Measurements(0, new Date(),rs.getSensorId(),rs.getCurrentValue()[0] +"", devicename);
-                LOG.info(TAG + "RssiValue: "+ meas.getValue());
-                mSaving.saveValue(meas);
-                break;
-        }
-    }
-
-
-    /**
+     /**
      * Wertet das TouchEvent auf die Cameraview aus. An der Berührten Koordinate wird ein 8*8 großes
      * Rechteck verwendet, um einen Durchschnittswert der dortigen Farbe als Blobfarbe zu bestimmen.
      * @param event TouchEvent
+    * @param v
+     * @return
      */
-    private void handlePreviewTab(MotionEvent event){
+    public boolean onTouch(View v, MotionEvent event) {
         int cols = mRgba.cols();
         int rows = mRgba.rows();
 
@@ -255,7 +219,50 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
             touchedRegionRgba.release();
             touchedRegionHsv.release();
         }
+      return false; // don't need subsequent touch events
     }
+
+
+    /**
+     * OnClick Listner für Butten Clicks
+     * @param v
+     */
+    @Override
+    public void onClick(View v) {
+        switch(v.getId()){
+            case R.id.btn_capture:
+                //Capturebutton speichert die Anzahl der aktuellen blobs
+                this.saveBlobCount(this.mBlobCount);
+                this.saveMatToFile();
+                break;
+            case R.id.btn_capture_entropie:
+                //Capturebutton speichert die Entropie der aktuellen blobs
+                this.saveBlobEntropie(this.mBlobCount);
+                break;
+            case R.id.btn_savenotice:
+                Measurements m = new Measurements(0,new Date(),0,mTxtNotice.getText().toString(),devicename);
+                mSaving.saveValue(m);
+                Toast.makeText(this, "Notiz gespeichert:"+ m.toString(), Toast.LENGTH_SHORT).show();
+                break;
+            case R.id.btn_export:
+
+                File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
+                mSaving.exportCSV(f.getAbsolutePath() + "/sfw_measuerments.csv");
+                Toast.makeText(this, "Datenbank nach Downloads/swf_measuerments.csv Exportiert", Toast.LENGTH_SHORT).show();
+                break;
+
+            case R.id.btn_rssi:
+                RssiSensor rs = new RssiSensor(getApplicationContext());
+
+                Measurements meas = new Measurements(0, new Date(),rs.getSensorId(),rs.getCurrentValue()[0] +"", devicename);
+                LOG.info(TAG + "RssiValue: "+ meas.getValue());
+                Toast.makeText(this, "RSSI gespeichert: " +meas.getValue(), Toast.LENGTH_SHORT).show();
+
+                mSaving.saveValue(meas);
+                break;
+        }
+    }
+
 
 
     /**
@@ -287,6 +294,36 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         return inputFrame;
     }
 
+
+
+    public  Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame){
+        mRgba= inputFrame.rgba();
+        try {
+
+            mRgba.convertTo(mRgba, -1, Integer.parseInt(mTxtAlpha.getText().toString()), Integer.parseInt(mTxtBeta.getText().toString()));
+        }catch (Exception e){
+            LOG.error("Keine Modifikation/Aufhellung möglihc");
+
+        }
+
+        if (mIsColorSelected) {
+            ((MyProcessor)mProcessor).process(mRgba);
+            List<MatOfPoint> contours = ((MyProcessor)mProcessor).getContours();
+            LOG.info(TAG + "Contours count: " + contours.size());
+            mBlobCount = contours.size();
+            Imgproc.drawContours(mRgba, contours, -1, CONTOUR_COLOR);
+
+            //ausgewählte Farbe einblenden
+            Mat colorLabel = mRgba.submat(4, 68, 4, 68);
+            colorLabel.setTo(mBlobColorRgba);
+
+            //zugehöriges Farbsprektrum ebenfalls einblenden
+            Mat spectrumLabel = mRgba.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
+            mSpectrum.copyTo(spectrumLabel);
+        }
+        return  mRgba;
+
+    }
 
 
 
@@ -371,7 +408,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
 
         Measurements messung = new Measurements(0,new Date(),55,anzahl+"",devicename);
-        Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
+        Toast.makeText(this, "Blobcount gespeichert, Wert: "+messung.getValue(), Toast.LENGTH_LONG).show();
         mSaving.saveValue(messung);
     }
 
@@ -435,3 +472,112 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
     }*/
 }
+
+//#######################################################################
+//import android.app.Activity;
+//import android.os.Bundle;
+//import android.util.Log;
+//import android.view.MenuItem;
+//import android.view.SurfaceView;
+//import android.view.WindowManager;
+//
+//
+//
+//import org.opencv.android.BaseLoaderCallback;
+//import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
+//import org.opencv.android.LoaderCallbackInterface;
+//import org.opencv.android.OpenCVLoader;
+//import org.opencv.core.Mat;
+//import org.opencv.android.CameraBridgeViewBase;
+//import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
+//
+//
+//import masterthesis.cc.distributedsensorframework.R;
+//
+//public class MyMeasurementActivity extends Activity implements CvCameraViewListener {
+//    private static final String TAG = "OCVSample::Activity";
+//
+//    private CameraBridgeViewBase mOpenCvCameraView;
+//    private boolean              mIsJavaCamera = true;
+//    private MenuItem mItemSwitchCamera = null;
+//
+//    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
+//        @Override
+//        public void onManagerConnected(int status) {
+//            switch (status) {
+//                case LoaderCallbackInterface.SUCCESS:
+//                {
+//                    Log.i(TAG, "OpenCV loaded successfully");
+//                    mOpenCvCameraView.enableView();
+//                } break;
+//                default:
+//                {
+//                    super.onManagerConnected(status);
+//                } break;
+//            }
+//        }
+//    };
+//
+//    public MyMeasurementActivity() {
+//        Log.i(TAG, "Instantiated new " + this.getClass());
+//    }
+//
+//    /** Called when the activity is first created. */
+//    @Override
+//    public void onCreate(Bundle savedInstanceState) {
+//        Log.i(TAG, "called onCreate");
+//        super.onCreate(savedInstanceState);
+//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+//
+//        setContentView(R.layout.tutorial1_surface_view);
+//
+//        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.tutorial1_activity_java_surface_view);
+//
+//        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
+//
+//        mOpenCvCameraView.setCvCameraViewListener(this);
+//    }
+//
+//    @Override
+//    public void onPause()
+//    {
+//        super.onPause();
+//        if (mOpenCvCameraView != null)
+//            mOpenCvCameraView.disableView();
+//    }
+//
+//    @Override
+//    public void onResume()
+//    {
+//        super.onResume();
+//        if (!OpenCVLoader.initDebug()) {
+//            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
+//            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
+//        } else {
+//            Log.d(TAG, "OpenCV library found inside package. Using it!");
+//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
+//        }
+//    }
+//
+//    public void onDestroy() {
+//        super.onDestroy();
+//        if (mOpenCvCameraView != null)
+//            mOpenCvCameraView.disableView();
+//    }
+//
+//    public void onCameraViewStarted(int width, int height) {
+//    }
+//
+//    public void onCameraViewStopped() {
+//    }
+//
+//    public Mat onCameraFrame(Mat inputFrame) {
+//
+//
+//
+//
+//        inputFrame.convertTo(inputFrame, -1,5,70);
+//        return inputFrame;
+//    }
+//}
+//

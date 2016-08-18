@@ -63,10 +63,11 @@ public class SensorMaster extends Service {
         mgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
        // mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_LIGHT),SensorManager.SENSOR_DELAY_UI);
         //mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_ACCELEROMETER),1000*30 );
-       // mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), 1000*10);
+
+        mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD), 1000*10);
 
         ls = new LocationSensor(getApplicationContext());
-        ls.registerListener(customListener, 5000);
+        ls.registerListener(customListener, 60000);
 
         rs = new RssiSensor(getApplicationContext());
         rs.registerListener(customListener,0);
@@ -137,10 +138,18 @@ public class SensorMaster extends Service {
 
         @Override
         public void onSensorChanged(CustomSensorEvent event) {
+            String devicename = Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
+
 
             if (event.getSensorType()== 101) {
+               // Log.w("SensorMaster", event.getValue(0) + " " + event.getValue(1));
 
-                Log.w("SensorMaster", event.getValue(0) + " " + event.getValue(1));
+                Measurements messung = new Measurements(0,new Date(),101, event.getValue(0)+" " + event.getValue(1),devicename);
+                Log.e("SensorMaster", messung.toString());
+                // Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
+                saveClass.saveValue(messung);
+
+
             }else if (event.getSensorType() ==102) {
                 Log.w("SensorMaster", "Current RSSI Value2: " + rs.getCurrentValue()[0]);
             }else{

@@ -31,8 +31,9 @@ public class LocationSensor extends GenericSensor implements LocationListener{
         locMgr = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
 
         if (! locMgr.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-            context.startActivity(intent); //TODO
+          //  Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
+          //  context.startActivity(intent); //TODO
+            LOG.error("LocationSensor nicht verfügbar");
         }
 
         Criteria criteria = new Criteria();

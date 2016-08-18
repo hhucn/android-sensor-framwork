@@ -1,7 +1,9 @@
 package masterthesis.cc.distributedsensorframework.core;
 
 import org.opencv.android.BaseLoaderCallback;
+import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
+import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
@@ -9,7 +11,9 @@ import org.opencv.core.Mat;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.hardware.Camera;
 import android.os.Bundle;
+import android.util.AttributeSet;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
@@ -20,7 +24,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
-public class MeasurementActivity extends Activity implements CvCameraViewListener, View.OnTouchListener {
+public class MeasurementActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
 
     private static final String  TAG = "MeasurementActivity ";
 
@@ -62,17 +66,17 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
 
         LOG.debug("Creating and setting View");
         //Log.d(TAG, "************************ Creating and seting view");
-        mOpenCvCameraView =  new JavaCameraView(this, -1);
+          mOpenCvCameraView =  new JavaCameraView(this, -1);
+
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setCameraIndex(JavaCameraView.CAMERA_ID_BACK);
-
 
         setContentView(mOpenCvCameraView);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
         mSaving = SaveClass.getInstance(this.getApplicationContext());
 
-        mProcessor = new Processor(4);
+        mProcessor = new Processor();
     }
 
     @Override
@@ -126,8 +130,18 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         return false;
     }
 
+
+    /**
+     * CameraViewListener
+     * @param inputFrame
+     * @return
+     */
     public Mat onCameraFrame(Mat inputFrame) {
         return mProcessor.processMatrix(inputFrame);
+    }
+
+    public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputframe){
+        return mProcessor.processMatrix(inputframe.rgba());
     }
 
 
