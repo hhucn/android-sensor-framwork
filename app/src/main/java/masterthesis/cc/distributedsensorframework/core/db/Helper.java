@@ -3,12 +3,9 @@ package masterthesis.cc.distributedsensorframework.core.db;
 import android.content.Context;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import masterthesis.cc.distributedsensorframework.core.MeasurementActivity;
 
 /**
  * Created by luke on 19.04.16.
@@ -41,7 +38,6 @@ public class Helper extends SQLiteOpenHelper {
     public Helper(Context context){
         super(context, DB_NAME, null, DB_VERSION);
         //DB erzeugt
-        //Log.d("DATABASE", "DB Helper erstellt");
         LOG.debug("DB Helper erstellt");
     }
 
@@ -51,7 +47,6 @@ public class Helper extends SQLiteOpenHelper {
     public void onCreate(SQLiteDatabase db) {
         try {
             db.execSQL(SQL_CREATE);
-            //Log.d("DATABASE", "Datenbank angelegt");
             LOG.debug("Datenbank angelegt");
         }catch (Exception e){
             LOG.error("Datenbank nicht angelegt: " + e.getMessage());

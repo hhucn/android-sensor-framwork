@@ -41,6 +41,7 @@ import java.util.List;
 import masterthesis.cc.distributedsensorframework.R;
 import masterthesis.cc.distributedsensorframework.core.CustomSensor.RssiSensor;
 import masterthesis.cc.distributedsensorframework.core.MeasurementActivity;
+import masterthesis.cc.distributedsensorframework.core.PhotoPostProd;
 import masterthesis.cc.distributedsensorframework.core.SensorMaster;
 import masterthesis.cc.distributedsensorframework.core.db.Measurements;
 
@@ -75,7 +76,6 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
 
-
         SensorManager sm = (SensorManager) getSystemService(SENSOR_SERVICE);
         List<Sensor> list = sm.getSensorList(Sensor.TYPE_ALL);
         for (int i=0;i<list.size();i++){
@@ -83,17 +83,9 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
             LOG.info(tmp.getName() + "|" + tmp.getType());
         }
 
-        //  ((MyProcessor)mProcessor).setMinContourArea(3.0);
-        /*this.mOpenCvCameraView.setColorEffect(Camera.Parameters.EFFECT_NONE);
-        mOpenCvCameraView.setColorEffect(Camera.Parameters.EFFECT_NONE);
-        mOpenCvCameraView.setFocus(Camera.Parameters.FOCUS_MODE_FIXED);
-        mOpenCvCameraView.setLockWhiteBalance(true);
-        mOpenCvCameraView.setZoom(2);*/
-        //Log.e("MYmeasuerment", "-##########################started###########################");
         LOG.info(TAG + " started");
 
         devicename = Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
-
 
         //Contentview der Superklasse überschreiben
         setContentView(R.layout.measurement_activity);
@@ -118,11 +110,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         mOpenCvCameraView = (JavaCameraView) findViewById(R.id.OpenCvCameraView);
         mOpenCvCameraView.setCvCameraViewListener(this);
 
-
         startService();
-
-
-
     }
 
 
@@ -219,7 +207,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
             touchedRegionRgba.release();
             touchedRegionHsv.release();
         }
-      return false; // don't need subsequent touch events
+      return false; // touchEvent nicht weiter verfolgen
     }
 
 
@@ -260,49 +248,38 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
                 mSaving.saveValue(meas);
                 break;
+
+
+            case R.id.btn_postprod:
+                Intent i = new Intent(this , PhotoPostProd.class);
+                startActivity(i);
+                break;
         }
     }
 
 
 
+
+/*
+
+    public Mat onCameraFrame(Mat inputFrame) {
+        inputFrame.copyTo(mRgba);
+        return inputFrame;
+    }
+*/
+
     /**
      * Callback, welches die eingehenden Kameraframes bearbeitet, sobald eine Blobfarbe ausgewählt ist.
      * In diesem Fall wird in dem Frame mit Hilfe des MyProcessors die Blobs der gewählten Farbe mit einer Kontur
      * versehen. Zudem wird im Oberen linken Framerand die gewählte Blob-Farbe und das zugehörige Spektrum eingeblendet
-     * @param inputFrame einzelner Kameraframe
-     * @return Mat, welches im preview angezeigt wird
-     */
-    public Mat onCameraFrame(Mat inputFrame) {
-        inputFrame.copyTo(mRgba);
-
-     /*   if (mIsColorSelected) {
-            ((MyProcessor)mProcessor).process(inputFrame);
-            List<MatOfPoint> contours = ((MyProcessor)mProcessor).getContours();
-            LOG.info(TAG + "Contours count: " + contours.size());
-            mBlobCount = contours.size();
-            Imgproc.drawContours(inputFrame, contours, -1, CONTOUR_COLOR);
-
-            //ausgewählte Farbe einblenden
-            Mat colorLabel = inputFrame.submat(4, 68, 4, 68);
-            colorLabel.setTo(mBlobColorRgba);
-
-            //zugehöriges Farbsprektrum ebenfalls einblenden
-            Mat spectrumLabel = inputFrame.submat(4, 4 + mSpectrum.rows(), 70, 70 + mSpectrum.cols());
-            mSpectrum.copyTo(spectrumLabel);
-        }*/
-
-        return inputFrame;
-    }
-
-
-
+    **/
     public  Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame){
         mRgba= inputFrame.rgba();
         try {
 
             mRgba.convertTo(mRgba, -1, Integer.parseInt(mTxtAlpha.getText().toString()), Integer.parseInt(mTxtBeta.getText().toString()));
         }catch (Exception e){
-            LOG.error("Keine Modifikation/Aufhellung möglihc");
+            LOG.error("Keine Modifikation/Aufhellung möglich!");
 
         }
 
@@ -328,7 +305,6 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
 
     private void saveMatToFile(){
-
         Bitmap bmp = null;
         try {
             bmp = Bitmap.createBitmap(mRgba.cols(), mRgba.rows(), Bitmap.Config.ARGB_8888);
@@ -339,11 +315,9 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
         FileOutputStream out = null;
 
-
         SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd_HH:mm:ss");
 
         String filename =  "cameraframe_"+dateFormat.format(new Date())+".png";
-
 
         File sd = new File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS) , "/sensorframework");
         boolean success = true;
@@ -352,12 +326,9 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         }
         if (success) {
             File dest = new File(sd, filename);
-
             try {
                 out = new FileOutputStream(dest);
-                bmp.compress(Bitmap.CompressFormat.PNG, 100, out); // bmp is your Bitmap instance
-                // PNG is a lossless format, the compression factor (100) is ignored
-
+                bmp.compress(Bitmap.CompressFormat.PNG, 100, out);
             } catch (Exception e) {
                 e.printStackTrace();
                 LOG.debug(TAG + e.getMessage());
@@ -365,11 +336,9 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
                 try {
                     if (out != null) {
                         out.close();
-                        //Log.d(TAG, "OK!!");
                         LOG.debug("Cameraframe gespeichert!");
                     }
                 } catch (IOException e) {
-                    //Log.d(TAG, e.getMessage() + "Error");
                     LOG.error("Fehler beim Speichern des Bildes:"+ e.getMessage());
                     e.printStackTrace();
                 }
@@ -380,39 +349,15 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     /**
      * Speichert die Anzahl der Aktuellen Blobs in der Datenbank
      * @param anzahl Blobanzahl
      */
     private void saveBlobCount(int anzahl){
-
-        //final TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
-
         Measurements messung = new Measurements(0,new Date(),55,anzahl+"",devicename);
         Toast.makeText(this, "Blobcount gespeichert, Wert: "+messung.getValue(), Toast.LENGTH_LONG).show();
         mSaving.saveValue(messung);
     }
-
-
 
 
     /**
@@ -420,17 +365,10 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
      * @param anzahl Blobanzahl
      */
     private void saveBlobEntropie(int anzahl){
-
-        //final TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
-
         Measurements messung = new Measurements(0,new Date(),55,anzahl+"",devicename);
         Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
         mSaving.saveValue(messung);
     }
-
-
-
 
 
     public void startService(){
@@ -444,140 +382,5 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         stopService(i);
     }
 
-
-
-
-
-
-
-
-/*
-    @Override
-    public void beginSession() {
-
-    }
-
-    @Override
-    public void pauseSession() {
-
-    }
-
-    @Override
-    public void restartSession() {
-
-    }
-
-    @Override
-    public void endSession() {
-
-    }*/
 }
 
-//#######################################################################
-//import android.app.Activity;
-//import android.os.Bundle;
-//import android.util.Log;
-//import android.view.MenuItem;
-//import android.view.SurfaceView;
-//import android.view.WindowManager;
-//
-//
-//
-//import org.opencv.android.BaseLoaderCallback;
-//import org.opencv.android.CameraBridgeViewBase.CvCameraViewFrame;
-//import org.opencv.android.LoaderCallbackInterface;
-//import org.opencv.android.OpenCVLoader;
-//import org.opencv.core.Mat;
-//import org.opencv.android.CameraBridgeViewBase;
-//import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
-//
-//
-//import masterthesis.cc.distributedsensorframework.R;
-//
-//public class MyMeasurementActivity extends Activity implements CvCameraViewListener {
-//    private static final String TAG = "OCVSample::Activity";
-//
-//    private CameraBridgeViewBase mOpenCvCameraView;
-//    private boolean              mIsJavaCamera = true;
-//    private MenuItem mItemSwitchCamera = null;
-//
-//    private BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
-//        @Override
-//        public void onManagerConnected(int status) {
-//            switch (status) {
-//                case LoaderCallbackInterface.SUCCESS:
-//                {
-//                    Log.i(TAG, "OpenCV loaded successfully");
-//                    mOpenCvCameraView.enableView();
-//                } break;
-//                default:
-//                {
-//                    super.onManagerConnected(status);
-//                } break;
-//            }
-//        }
-//    };
-//
-//    public MyMeasurementActivity() {
-//        Log.i(TAG, "Instantiated new " + this.getClass());
-//    }
-//
-//    /** Called when the activity is first created. */
-//    @Override
-//    public void onCreate(Bundle savedInstanceState) {
-//        Log.i(TAG, "called onCreate");
-//        super.onCreate(savedInstanceState);
-//        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
-//
-//        setContentView(R.layout.tutorial1_surface_view);
-//
-//        mOpenCvCameraView = (CameraBridgeViewBase) findViewById(R.id.tutorial1_activity_java_surface_view);
-//
-//        mOpenCvCameraView.setVisibility(SurfaceView.VISIBLE);
-//
-//        mOpenCvCameraView.setCvCameraViewListener(this);
-//    }
-//
-//    @Override
-//    public void onPause()
-//    {
-//        super.onPause();
-//        if (mOpenCvCameraView != null)
-//            mOpenCvCameraView.disableView();
-//    }
-//
-//    @Override
-//    public void onResume()
-//    {
-//        super.onResume();
-//        if (!OpenCVLoader.initDebug()) {
-//            Log.d(TAG, "Internal OpenCV library not found. Using OpenCV Manager for initialization");
-//            OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
-//        } else {
-//            Log.d(TAG, "OpenCV library found inside package. Using it!");
-//            mLoaderCallback.onManagerConnected(LoaderCallbackInterface.SUCCESS);
-//        }
-//    }
-//
-//    public void onDestroy() {
-//        super.onDestroy();
-//        if (mOpenCvCameraView != null)
-//            mOpenCvCameraView.disableView();
-//    }
-//
-//    public void onCameraViewStarted(int width, int height) {
-//    }
-//
-//    public void onCameraViewStopped() {
-//    }
-//
-//    public Mat onCameraFrame(Mat inputFrame) {
-//
-//
-//
-//
-//        inputFrame.convertTo(inputFrame, -1,5,70);
-//        return inputFrame;
-//    }
-//}
-//

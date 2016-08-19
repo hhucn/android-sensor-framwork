@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="fill_parent"
+    android:layout_height="fill_parent"
+    android:orientation="vertical"
+    tools:context=".ImagePickerActivity" >
+
+    <Button
+        android:id="@+id/btn_refresh"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="refresh"
+        android:layout_below="@+id/btn_pick"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:id="@+id/btn_pick"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="LoadImage"
+        android:layout_below="@+id/imageView"
+        android:layout_alignParentStart="true" />
+
+    <ImageView
+        android:id="@+id/imageView"
+        android:layout_width="400dp"
+        android:layout_height="300dp"
+        android:maxHeight="200dp"
+        android:src="@mipmap/ic_launcher"
+        android:layout_gravity="center_horizontal"
+        android:layout_alignParentTop="true"
+        android:layout_centerHorizontal="true" />
+
+</RelativeLayout>

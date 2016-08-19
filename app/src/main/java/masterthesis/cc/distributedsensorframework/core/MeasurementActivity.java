@@ -2,7 +2,6 @@ package masterthesis.cc.distributedsensorframework.core;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
-import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener;
 import org.opencv.android.CameraBridgeViewBase.CvCameraViewListener2;
 import org.opencv.android.JavaCameraView;
 import org.opencv.android.LoaderCallbackInterface;
@@ -11,10 +10,7 @@ import org.opencv.core.Mat;
 
 import android.app.Activity;
 import android.content.Intent;
-import android.hardware.Camera;
 import android.os.Bundle;
-import android.util.AttributeSet;
-import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
@@ -56,6 +52,7 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         }
     };
 
+
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -65,8 +62,7 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
         LOG.debug("Creating and setting View");
-        //Log.d(TAG, "************************ Creating and seting view");
-          mOpenCvCameraView =  new JavaCameraView(this, -1);
+        mOpenCvCameraView =  new JavaCameraView(this, -1);
 
         mOpenCvCameraView.enableFpsMeter();
         mOpenCvCameraView.setCameraIndex(JavaCameraView.CAMERA_ID_BACK);
@@ -78,6 +74,7 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
 
         mProcessor = new Processor();
     }
+
 
     @Override
     public void onPause()

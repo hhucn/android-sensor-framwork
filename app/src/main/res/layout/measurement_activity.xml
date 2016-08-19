@@ -59,6 +59,14 @@
         android:text="Export" >
     </Button>
 
+    <Button
+        android:id="@+id/btn_postprod"
+        android:layout_width="80dp"
+        android:layout_height="50dp"
+        android:onClick="onClick"
+        android:text="Post Prod" >
+    </Button>
+
 </LinearLayout>
 
 

@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.os.Environment;
 import android.util.Log;
 
 import org.slf4j.Logger;
@@ -57,9 +56,6 @@ public class Source {
         Cursor cursor  = database.query(Helper.TABLE_MEASUREMENTS,null, null, null, null, null, null, limit+"");
         LOG.info("Anzahl geladener Zeilen: " + cursor.getColumnCount()+"");
         cursor.moveToFirst();
-       // Measurements m = this.cursorToMesswert(cursor);
-        //cursor.close();
-        //cursor.moveToFirst();
         return cursor;
     }
 
@@ -96,21 +92,12 @@ public class Source {
 
 
     //auf basis von http://stackoverflow.com/questions/14509026/export-sqlite-into-csv
-
-
     public Boolean exportCSV(String outFileName) {
         LOG.debug("saving Backup as CSV:");
         Boolean returnCode = false;
         int i = 0;
         String csvHeader = "ID,SensorId,Value,Zeitstempel,GeraeteId";
         String csvValues = "";
-       /* for (i = 0; i < Helper.CURCOND_COLUMN_NAMES.length; i++) {
-            if (csvHeader.length() > 0) {
-                csvHeader += ",";
-            }
-            csvHeader += "\"" + GC.CURCOND_COLUMN_NAMES[i] + "\"";
-        }*/
-
         csvHeader += "\n";
         LOG.debug("Header: " + csvHeader);
         //open();
@@ -140,7 +127,6 @@ public class Source {
             returnCode = false;
             LOG.error("IOException beim CSV Esport: " + e.getMessage());
         }
-       // close();
         return returnCode;
     }
 
