@@ -4,7 +4,6 @@ import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,35 +22,54 @@ import java.util.Date;
  */
 public class Source {
 
-    private SQLiteDatabase database;
-    private Helper dbHelper;
-    private Logger LOG;
+    private SQLiteDatabase  database;
+    private Helper          dbHelper;
+    private Logger          LOG;
 
+
+    /**
+     * Konstruktor
+     * @param context Context Applikationskontext
+     */
     public Source(Context context){
         dbHelper = new Helper(context);
         LOG = LoggerFactory.getLogger(Source.class);
-
     }
 
+
+    /**
+     * Öffnet eine Verbindung zur Datenbank
+     */
     public void open() {
         LOG.info("Eine Referenz auf die Datenbank wird jetzt angefragt.");
         database = dbHelper.getWritableDatabase();
         LOG.info("Datenbank-Referenz erhalten. Pfad zur Datenbank: " + database.getPath());
     }
 
+
+    /**
+     * Schließt die Verbindung zur DB
+     */
     public void close() {
         dbHelper.close();
         LOG.info("Datenbank mit Hilfe des DbHelpers geschlossen.");
     }
 
-
+    /**
+     * Speichert den Datensatz in der Messdatentabelle
+     * @param cv ContentValues zu speichernder Datensatz
+     * @return long Insert-ID
+     */
     public long insert(ContentValues cv){
         return database.insert(Helper.TABLE_MEASUREMENTS, null, cv);
     }
 
 
-
-
+    /**
+     * Lädt eine gewisse Anzahl an Zeilen aus der Messdatentabelle
+     * @param limit int Maximale Zeilenzahl
+     * @return Cursor Datenbankcursor
+     */
     public Cursor load(int limit){
         Cursor cursor  = database.query(Helper.TABLE_MEASUREMENTS,null, null, null, null, null, null, limit+"");
         LOG.info("Anzahl geladener Zeilen: " + cursor.getColumnCount()+"");
@@ -59,6 +77,12 @@ public class Source {
         return cursor;
     }
 
+
+    /**
+     *
+     * @param cursor
+     * @return
+     */
     private Measurements cursorToMesswert(Cursor cursor){
         int idIndex = cursor.getColumnIndex(Helper.COLUM_ID);
         int idValue = cursor.getColumnIndex(Helper.COLUM_VALUE);
@@ -72,8 +96,7 @@ public class Source {
         int sensor = cursor.getInt(idSensor);
         String timestamp = cursor.getString(idTimestamp);
 
-
-         Log.i("Datenbankergebins", "Timepstamp:"+ timestamp);
+        LOG.info("Datenbankergebins: Timepstamp:"+ timestamp);
         DateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
         Date date;
@@ -90,8 +113,12 @@ public class Source {
     }
 
 
-
-    //auf basis von http://stackoverflow.com/questions/14509026/export-sqlite-into-csv
+    /**
+     * Speichert den Inhalt der Messdatentabelle in einer CSV Datei
+     * @param outFileName String Pfad und Dateiname
+     * @return Boolean (Miss-)erfolgsmeldung
+     * auf basis von http://stackoverflow.com/questions/14509026/export-sqlite-into-csv
+     */
     public Boolean exportCSV(String outFileName) {
         LOG.debug("saving Backup as CSV:");
         Boolean returnCode = false;
@@ -100,12 +127,10 @@ public class Source {
         String csvValues = "";
         csvHeader += "\n";
         LOG.debug("Header: " + csvHeader);
-        //open();
         try {
             File outFile = new File(outFileName);
             FileWriter fileWriter = new FileWriter(outFile);
             BufferedWriter out = new BufferedWriter(fileWriter);
-            //Cursor cursor = dbAdapter.getAllRows();
             Cursor cursor = load(1000000);
             if (cursor != null) {
                 out.write(csvHeader);
@@ -134,12 +159,12 @@ public class Source {
 
 
     /**
-     * Funktion prüfen
+     * Update der
      * @param cv
      * @param whereClause
      * @return
      */
-    public long update(ContentValues cv, String whereClause){
+    public long upsdate(ContentValues cv, String whereClause){
         return  database.update(Helper.TABLE_MEASUREMENTS, cv, whereClause, null);
     }
 }

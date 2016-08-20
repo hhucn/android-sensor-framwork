@@ -29,7 +29,6 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.imgproc.Imgproc;
-import org.w3c.dom.Text;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -46,7 +45,7 @@ import masterthesis.cc.distributedsensorframework.core.SensorMaster;
 import masterthesis.cc.distributedsensorframework.core.db.Measurements;
 
 /**
- * Created by Christoph Classen on 11.05.16.
+ * Created by Christoph Classen
  */
 public class MyMeasurementActivity extends MeasurementActivity implements View.OnClickListener {
 
@@ -60,17 +59,17 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     private Size                 SPECTRUM_SIZE;
     private Scalar               CONTOUR_COLOR;
     private int                  mBlobCount;
+    private String               devicename;
+
     private Button               mBtnCapture;
     private Button               mBtnCaptureEntropie;
     private Button               mBtnExport;
     private Button               mBtnNotice;
-    private TextView            mTxtNotice;
 
-    private TextView            mTxtAlpha;
+    private TextView             mTxtNotice;
+    private TextView             mTxtAlpha;
+    private TextView             mTxtBeta;
 
-    private TextView            mTxtBeta;
-
-    private String               devicename;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -120,7 +119,9 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
         stopService();
     }
 
-
+    /**
+     * Beim (Re-)Start der Activity wird das OpenCV Framework geladen
+     */
     @Override
     public void onResume()
     {
@@ -135,18 +136,25 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     }
 
 
-
+    /**
+     * Listner für den Kamerastart, setzt Defaultwerte
+     * @param width
+     * @param height
+     */
     public void onCameraViewStarted(int width, int height) {
         mRgba = new Mat(height, width, CvType.CV_8UC4);
         mProcessor = new MyProcessor();
         mSpectrum = new Mat();
         mBlobColorRgba = new Scalar(255);
         mBlobColorHsv = new Scalar(255);
-        SPECTRUM_SIZE = new Size(200, 64);
-        CONTOUR_COLOR = new Scalar(0,255,0,255);
+        SPECTRUM_SIZE = new Size(200, 64);          //Größe des Spektrums
+        CONTOUR_COLOR = new Scalar(0,255,0,255);    //Farbe der Umrisse
         mBlobCount=0;
     }
 
+    /**
+     * Kamerazugriff stoppen
+     */
     public void onCameraViewStopped() {
         mRgba.release();
         stopService();
@@ -219,7 +227,7 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     public void onClick(View v) {
         switch(v.getId()){
             case R.id.btn_capture:
-                //Capturebutton speichert die Anzahl der aktuellen blobs
+                //Blobcount speichert die Anzahl der aktuellen blobs
                 this.saveBlobCount(this.mBlobCount);
                 this.saveMatToFile();
                 break;
@@ -228,45 +236,35 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
                 this.saveBlobEntropie(this.mBlobCount);
                 break;
             case R.id.btn_savenotice:
+                //Initiiert das Speichern des Textes, der im Notizfeld steht
                 Measurements m = new Measurements(0,new Date(),0,mTxtNotice.getText().toString(),devicename);
                 mSaving.saveValue(m);
                 Toast.makeText(this, "Notiz gespeichert:"+ m.toString(), Toast.LENGTH_SHORT).show();
                 break;
             case R.id.btn_export:
-
+                //Ruft den Datenexport auf, das Verzeichnis ist dabei der Standarddownloadordner
                 File f = Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS);
                 mSaving.exportCSV(f.getAbsolutePath() + "/sfw_measuerments.csv");
                 Toast.makeText(this, "Datenbank nach Downloads/swf_measuerments.csv Exportiert", Toast.LENGTH_SHORT).show();
                 break;
 
             case R.id.btn_rssi:
+                //Misst den aktuellen RSSI wert und speichert diesen in der DB
                 RssiSensor rs = new RssiSensor(getApplicationContext());
-
                 Measurements meas = new Measurements(0, new Date(),rs.getSensorId(),rs.getCurrentValue()[0] +"", devicename);
                 LOG.info(TAG + "RssiValue: "+ meas.getValue());
                 Toast.makeText(this, "RSSI gespeichert: " +meas.getValue(), Toast.LENGTH_SHORT).show();
-
                 mSaving.saveValue(meas);
                 break;
 
-
             case R.id.btn_postprod:
+                //Ruft eine neue Activity zum nachträglichen auswerten von Fotos auf
                 Intent i = new Intent(this , PhotoPostProd.class);
                 startActivity(i);
                 break;
         }
     }
 
-
-
-
-/*
-
-    public Mat onCameraFrame(Mat inputFrame) {
-        inputFrame.copyTo(mRgba);
-        return inputFrame;
-    }
-*/
 
     /**
      * Callback, welches die eingehenden Kameraframes bearbeitet, sobald eine Blobfarbe ausgewählt ist.
@@ -303,7 +301,11 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     }
 
 
-
+    /**
+     * Speichert die aktuelle Matrix in einer Datei.
+     * Der Ordner ist dabei ein für das Framework erstellert Unterordner im
+     * Standarddownloadordner
+     */
     private void saveMatToFile(){
         Bitmap bmp = null;
         try {
@@ -371,12 +373,19 @@ public class MyMeasurementActivity extends MeasurementActivity implements View.O
     }
 
 
+    /**
+     * Startet den Hintergrund Sensorservice
+     */
     public void startService(){
         Log.e("Mymeasurmentactivity", System.currentTimeMillis() + ": start service");
         Intent i = new Intent(getApplicationContext(), SensorMaster.class);
         startService(i);
     }
 
+
+    /**
+     * Stoppt den Hintergrung Sensorservice
+     */
     public void stopService(){
         Intent i = new Intent(getApplicationContext(), SensorMaster.class);
         stopService(i);
