@@ -8,7 +8,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Created by luke on 19.04.16.
+ * Created by Christoph Classen
  */
 public class Helper extends SQLiteOpenHelper {
 

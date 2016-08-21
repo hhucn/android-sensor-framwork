@@ -3,7 +3,7 @@ package masterthesis.cc.distributedsensorframework.core.db;
 import java.util.Date;
 
 /**
- * Created by Christoph Classen on 19.04.16.
+ * Created by Christoph Classen
  * Diese Klasse repräsentiert genau einen Messwert, wie er auch in der DB gespeichert wird.
  */
 public class Measurements {

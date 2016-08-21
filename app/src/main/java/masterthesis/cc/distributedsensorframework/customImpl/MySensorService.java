@@ -3,7 +3,7 @@ package masterthesis.cc.distributedsensorframework.customImpl;
 import masterthesis.cc.distributedsensorframework.core.SensorMaster;
 
 /**
- * Created by luke on 30.06.16.
+ * Created by Christoph Classen
  */
 public class MySensorService extends SensorMaster {
 

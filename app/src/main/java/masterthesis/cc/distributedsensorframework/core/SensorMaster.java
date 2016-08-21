@@ -26,39 +26,38 @@ import masterthesis.cc.distributedsensorframework.core.CustomSensor.RssiSensor;
 import masterthesis.cc.distributedsensorframework.core.db.Measurements;
 
 /**
- * Created by luke on 04.04.16.
+ * Created by Christoph Classen
  */
 public class SensorMaster extends Service {
 
 
-    private final IBinder mBinder = new MyBinder();
-    private ArrayList<String> list = new ArrayList<String>();
-    private SensorManager mgr;
-    private ArrayList<String> primarySensors= new ArrayList<String>();
-    private ArrayList<String> secondarySensors= new ArrayList<String>();
+    private final   IBinder             mBinder = new MyBinder();
+    private         ArrayList<String>   list = new ArrayList<String>();
+    private         SensorManager       mgr;
 
-    protected SaveClass saveClass;
-    protected Logger LOG;
-    protected String TAG = "SensorMaster ";
+    protected       SaveClass           saveClass;
+    protected       Logger              LOG;
+    protected       String              TAG = "SensorMaster ";
 
-    private MeasurementActivity callbackActivity;
+    private         MeasurementActivity callbackActivity;
+
+    private         LocationSensor      ls;
+    private         RssiSensor          rs;
 
 
-
-    private LocationSensor ls;
-    private RssiSensor rs;
-
+    /**
+     * Konstruktor zur erstellung des Hintergrungservices
+     * @param intent
+     * @param flags
+     * @param startId
+     * @return
+     */
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         LOG = LoggerFactory.getLogger(SensorMaster.class);
         LOG.info(TAG + "service started");
 
-//        this.primarySensors = intent.getStringArrayListExtra("primarySensors");
-//        this.secondarySensors = intent.getStringArrayListExtra("secondarySensors");
-
         saveClass = SaveClass.getInstance(getApplicationContext());
-//        saveClass.writeLog(SaveClass.LogType.INFO, "Primary: "  + this.primarySensors.toString());
-//        saveClass.writeLog(SaveClass.LogType.INFO, "Secondrary Sensor: " + this.secondarySensors.toString());
 
         mgr = (SensorManager) getSystemService(Context.SENSOR_SERVICE);
        // mgr.registerListener(listener, mgr.getDefaultSensor(Sensor.TYPE_LIGHT),SensorManager.SENSOR_DELAY_UI);
@@ -101,6 +100,9 @@ public class SensorMaster extends Service {
     }
 
 
+    /**
+     * Behandelt Änderungen der Sensormesswerte für Android Standard Sensoren
+     */
     protected SensorEventListener listener = new SensorEventListener() {
         @Override
         public void onSensorChanged(SensorEvent event){
@@ -134,6 +136,10 @@ public class SensorMaster extends Service {
     };
 
 
+
+    /**
+     * Behandelt Änderungen der Sensormesswerte für eigene Sensoren
+     */
     protected CustomSensorEventListener customListener = new CustomSensorEventListener() {
 
         @Override
@@ -142,13 +148,9 @@ public class SensorMaster extends Service {
 
 
             if (event.getSensorType()== 101) {
-               // Log.w("SensorMaster", event.getValue(0) + " " + event.getValue(1));
-
                 Measurements messung = new Measurements(0,new Date(),101, event.getValue(0)+" " + event.getValue(1),devicename);
                 Log.e("SensorMaster", messung.toString());
-                // Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
                 saveClass.saveValue(messung);
-
 
             }else if (event.getSensorType() ==102) {
                 Log.w("SensorMaster", "Current RSSI Value2: " + rs.getCurrentValue()[0]);
@@ -164,41 +166,46 @@ public class SensorMaster extends Service {
     };
 
 
-
+    /**
+     * Speichert einen Sensorwert in die DB
+     * @param sensortype int ID des sensors
+     * @param event SensorEvent ausgelöstes Event mit Messwerten
+     */
     public void saveToDb(int sensortype, SensorEvent event){
 
         Log.e("Sensorvalues",  event.values[0] +"; " +event.values[1] +"; " +event.values[2] +"; " );
-        //final TelephonyManager tm = (TelephonyManager)getSystemService(Context.TELEPHONY_SERVICE);
-        //String devicename =tm.getDeviceId()+" ist deviceID:"+ Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
         String devicename = Build.MODEL + " ("+Build.PRODUCT+") " + Build.ID +"|"+ Build.SERIAL;
 
 
         Measurements messung = new Measurements(0,new Date(),sensortype, event.values[0]+"",devicename);
         Log.e("SensorMaster", messung.toString());
-        // Toast.makeText(this, messung.toString(), Toast.LENGTH_LONG).show();
-        saveClass.saveValue(messung);
-
-
-
-
+         saveClass.saveValue(messung);
 
     }
 
 
-
-
+    /**
+     * Liefert die Messdatenliste zurück an die als Callbac eingetragene Klasse
+     */
     public void updateCallback(){
         if (this.callbackActivity != null) {
             this.callbackActivity.callback(this.list);
         }
     }
 
-
-
+    /**
+     * Callback zur GUI setzen
+     * @param m MeasurementActivity, die die Callbacks empfangen soll
+     */
     public void registerCallback(MeasurementActivity m){
         this.callbackActivity = m;
     }
 
+
+    /**
+     * Getter für die Messdatenliste
+     * @return List of String Liste der Messdaten
+     */
     public List<String> getWordList() {
         return list;
     }

@@ -3,12 +3,10 @@ package masterthesis.cc.distributedsensorframework.core;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
-import android.util.Log;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.File;
 import java.text.SimpleDateFormat;
 
 import masterthesis.cc.distributedsensorframework.core.db.Helper;

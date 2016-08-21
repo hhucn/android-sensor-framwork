@@ -18,7 +18,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 
 /**
- * Created by Christoph Classen on 19.04.16.
+ * Created by Christoph Classen
  */
 public class Source {
 
@@ -164,7 +164,7 @@ public class Source {
      * @param whereClause
      * @return
      */
-    public long upsdate(ContentValues cv, String whereClause){
+    public long update(ContentValues cv, String whereClause){
         return  database.update(Helper.TABLE_MEASUREMENTS, cv, whereClause, null);
     }
 }

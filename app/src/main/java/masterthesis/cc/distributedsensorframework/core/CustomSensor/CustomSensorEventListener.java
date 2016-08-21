@@ -1,9 +1,7 @@
 package masterthesis.cc.distributedsensorframework.core.CustomSensor;
 
-import masterthesis.cc.distributedsensorframework.core.CustomSensor.CustomSensorEvent;
-
 /**
- * Created by luke on 28.07.16.
+ * Created by Christoph Classen
  */
 public interface CustomSensorEventListener {
 

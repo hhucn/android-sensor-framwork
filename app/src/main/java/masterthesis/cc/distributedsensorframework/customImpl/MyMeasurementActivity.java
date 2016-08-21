@@ -46,6 +46,9 @@ import masterthesis.cc.distributedsensorframework.core.db.Measurements;
 
 /**
  * Created by Christoph Classen
+ *
+ * Die Berechnungen der ColorBlobs basieren auf dem OpenCV beispiel "Colorblob erkennung"
+ * https://github.com/opencv/opencv/blob/master/samples/android/color-blob-detection/src/org/opencv/samples/colorblobdetect/ColorBlobDetectionActivity.java
  */
 public class MyMeasurementActivity extends MeasurementActivity implements View.OnClickListener {
 

@@ -19,7 +19,10 @@ import java.util.List;
 import masterthesis.cc.distributedsensorframework.core.Processor;
 
 /**
- * Created by luke on 05.07.16.
+ * Created by Christoph Claßen
+ * Diese Klasse stammt aus dem OpenCV Beispiel zur Color Blob Erkennung
+ * https://github.com/opencv/opencv/blob/master/samples/android/color-blob-detection/src/org/opencv/samples/colorblobdetect/ColorBlobDetector.java
+ *
  */
 public class MyProcessor extends Processor {
 
@@ -123,14 +126,6 @@ public class MyProcessor extends Processor {
         return mContours;
     }
 
-
-
-
-
-
-
-
-
     public MyProcessor() {
 
     }
@@ -153,8 +148,6 @@ public class MyProcessor extends Processor {
     public void deliverTouchEvent(int x, int y) {
         Log.e("SEONSOR", "Touch Oouhh");
     }
-
-
 
 
     public Scalar converScalarHsv2Rgba(Scalar hsvColor) {

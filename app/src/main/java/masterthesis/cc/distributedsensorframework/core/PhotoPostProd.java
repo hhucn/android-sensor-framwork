@@ -34,20 +34,31 @@ import java.util.List;
 import masterthesis.cc.distributedsensorframework.R;
 import masterthesis.cc.distributedsensorframework.customImpl.MyProcessor;
 
+
+/**
+ * Created by Christoph Classen
+ * Activity zum nachträglichen Bearbeiten von Fotos
+ * Die Berechnungen basieren auf dem OpenCV Beispiel
+ * "ColorBlob Erkennung".
+ * https://github.com/opencv/opencv/blob/master/samples/android/color-blob-detection/src/org/opencv/samples/colorblobdetect/ColorBlobDetectionActivity.java
+ * Jedoch wurden die Aufrufe
+ * umgebaut, um auch gespeicherte Fotos als Bildquelle
+ * verwenden zu können.
+ */
 public class PhotoPostProd extends ActionBarActivity implements View.OnTouchListener {
 
-    private final int SELECT_PHOTO = 1;
-    private ImageView imageView;
-    private Mat                  mRgba;
-    private Scalar mBlobColorHsv;
-    private Scalar               mBlobColorRgba;
-    private MyProcessor mProcessor;
-    private Mat                  mSpectrum;
-    private Size SPECTRUM_SIZE;
-    private boolean              mIsColorSelected = false;
-    private Scalar               CONTOUR_COLOR;
-    private Bitmap mBitmap;
-    protected Logger LOG;
+    private final   int         SELECT_PHOTO = 1;
+    private         ImageView   imageView;
+    private         Mat         mRgba;
+    private         Scalar      mBlobColorHsv;
+    private         Scalar      mBlobColorRgba;
+    private         MyProcessor mProcessor;
+    private         Mat         mSpectrum;
+    private         Size        SPECTRUM_SIZE;
+    private         boolean     mIsColorSelected = false;
+    private         Scalar      CONTOUR_COLOR;
+    private         Bitmap      mBitmap;
+    protected       Logger      LOG;
 
 
     @Override
@@ -68,8 +79,8 @@ public class PhotoPostProd extends ActionBarActivity implements View.OnTouchList
         });
 
 
+        //Intent zur Fotoauswahl starten
         pickImage.setOnClickListener(new View.OnClickListener() {
-
             @Override
             public void onClick(View view) {
                 Intent photoPickerIntent = new Intent(Intent.ACTION_PICK);
@@ -103,6 +114,12 @@ public class PhotoPostProd extends ActionBarActivity implements View.OnTouchList
     }
 
 
+    /**
+     * Reagiert auf die per Intent zurückgegebenen Bilddaten und zeigt diese in der View an
+     * @param requestCode
+     * @param resultCode
+     * @param imageReturnedIntent
+     */
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent imageReturnedIntent) {
         super.onActivityResult(requestCode, resultCode, imageReturnedIntent);
@@ -127,12 +144,13 @@ public class PhotoPostProd extends ActionBarActivity implements View.OnTouchList
         }
     }
 
-    @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        return true;
-    }
 
-
+    /**
+     * Wertet Berührungen auf der ImageView aus und berechnet für diesen Punkt die Durchschnittsfarben
+     * @param v
+     * @param e
+     * @return
+     */
     @Override
     public boolean onTouch (View v, MotionEvent e) {
         int cols = mRgba.cols();
@@ -181,6 +199,9 @@ public class PhotoPostProd extends ActionBarActivity implements View.OnTouchList
     }
 
 
+    /**
+     * Aktualisiert die Bildanzeige mit Blob-Umrissen, Zielfarben- und Spekturms-anzeige
+     */
     private void refreshImg(){
         LOG.debug("refresh img");
 
@@ -204,6 +225,9 @@ public class PhotoPostProd extends ActionBarActivity implements View.OnTouchList
     }
 
 
+    /**
+     * Lädt die OpenCV Bibiothek asynchron
+     */
     protected BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
         public void onManagerConnected(int status) {

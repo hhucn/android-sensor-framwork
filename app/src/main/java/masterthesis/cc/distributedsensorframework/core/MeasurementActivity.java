@@ -20,17 +20,22 @@ import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 
+
+/**
+ * Created by Christoph Classen
+ * Basisklasse für Messungen mit Cameraview und OpenCV
+ */
 public class MeasurementActivity extends Activity implements CvCameraViewListener2, View.OnTouchListener {
 
-    private static final String  TAG = "MeasurementActivity ";
+    private static final    String          TAG = "MeasurementActivity ";
+    protected               JavaCameraView  mOpenCvCameraView;
+    protected               Processor       mProcessor;
+    protected               SaveClass       mSaving;
+    protected               Logger          LOG;
 
-    protected JavaCameraView mOpenCvCameraView;
-    protected Processor mProcessor;
-    protected SaveClass mSaving;
-    protected Logger    LOG;
+    private                 int             mViewWidth;
+    private                 int             mViewHeight;
 
-    private int                  mViewWidth;
-    private int                  mViewHeight;
 
     protected BaseLoaderCallback mLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -53,6 +58,10 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
     };
 
 
+    /**
+     * Activity erstellen
+     * @param savedInstanceState
+     */
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -76,6 +85,9 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
     }
 
 
+    /**
+     * Pausierung der Activity Behandeln und Kamerazugriff und View beenden
+     */
     @Override
     public void onPause()
     {
@@ -84,6 +96,10 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
             mOpenCvCameraView.disableView();
     }
 
+
+    /**
+     * Bei (Re-)Start der Activity OpenCV laden
+     */
     @Override
     public void onResume()
     {
@@ -91,6 +107,10 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
         OpenCVLoader.initAsync(OpenCVLoader.OPENCV_VERSION_3_0_0, this, mLoaderCallback);
     }
 
+
+    /**
+     * Zerstörung der Activity behandleln und Kameraview(Kamerazugriff) beenden
+     */
     public void onDestroy() {
         super.onDestroy();
         if (mOpenCvCameraView != null)
@@ -98,15 +118,25 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
     }
 
 
-
+    /**
+     * Kamerazugirff starten
+     * @param width -  the width of the frames that will be delivered
+     * @param height - the height of the frames that will be delivered
+     */
     public void onCameraViewStarted(int width, int height) {
         mViewWidth = width;
         mViewHeight = height;
         mProcessor.prepareViewSize(mViewWidth, mViewHeight);
     }
 
+
+    /**
+     * Kamerazugriff beenden
+     */
     public void onCameraViewStopped() {
     }
+
+
 
     public boolean onTouch(View view, MotionEvent event) {
 
@@ -129,29 +159,46 @@ public class MeasurementActivity extends Activity implements CvCameraViewListene
 
 
     /**
-     * CameraViewListener
-     * @param inputFrame
-     * @return
+     * Verarbeitet das Kamerabild
+     * @param inputFrame Mat neues Kamerabild
+     * @return Mat bearbeitetes Kamerabild zur Anzeige durch die CameraView
      */
     public Mat onCameraFrame(Mat inputFrame) {
         return mProcessor.processMatrix(inputFrame);
     }
 
+
+    /**
+     * Verarbeitet das Kamerabild
+     * @param inputframe CvCameraViewFrame neues Kamerabild
+     * @return Mat bearbeitetes Kamerabild zur Anzeige durch die CameraView
+     */
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputframe){
         return mProcessor.processMatrix(inputframe.rgba());
     }
 
 
+    /**
+     * startet Hintergrund Sensorservice
+     */
     public void startService(){
         Intent i = new Intent(getApplicationContext(), SensorMaster.class);
         startService(i);
     }
 
+
+    /**
+     * stoppt Hintergrund-Sensorservice
+     */
     public void stopService(){
         Intent i = new Intent(getApplicationContext(), SensorMaster.class);
         stopService(i);
     }
 
+    /**
+     * DummyCallback zum Datenempfang des Hintergrundservices
+     * @param words Sensordeaten vom Service
+     */
     public void callback(ArrayList<String> words) {
 
     }
